@@ -1,7 +1,7 @@
 # CLIENT -> SERVER
 PONG
 
-NEW 
+NEW
     name_len: int
     player_name: str
     game_id: int
