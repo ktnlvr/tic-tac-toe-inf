@@ -8,4 +8,4 @@ server: compile
 	./build/src/server/server
 
 client: compile
-	./build/src/client-tui/client-tui
+	./build/src/client-tui/client-tui localhost

@@ -2,6 +2,8 @@
 
 #pragma once
 
+#define PORT 42069
+
 typedef enum client2server_packet_id {
   C2S_PONG,
 } client2server_packet_id;

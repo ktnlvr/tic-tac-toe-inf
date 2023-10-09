@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+typedef int fd;
+
 typedef char ch;
 
 typedef uint8_t u1;
