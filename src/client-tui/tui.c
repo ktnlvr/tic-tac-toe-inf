@@ -75,7 +75,7 @@ tui_display(tui* tui) {
   u1* active_ui = &tui->active_ui_element;
 
   switch (tui->ui_mode) {
-    case UI_MODE_UNINITIALIZED:
+    case UI_MODE_UNINITIALIZED: {
       // Set up ncurses data
       tui->ncurses_window = initscr();
       memset((void*)&tui->data, 0x00, sizeof tui->data.dial_in);
@@ -100,21 +100,31 @@ tui_display(tui* tui) {
 
       curs_set(0);
       keypad(tui->ncurses_window, TRUE);
-    case UI_MODE_DIAL_IN:
+    }
+    case UI_MODE_DIAL_IN: {
+      tui_text_input_field* fields = tui->data.dial_in.fields;
+
       // TODO: make this use box(...)
       wprintw(tui->ncurses_window, "+---------------------------+\n");
       wprintw(tui->ncurses_window, "| xoxo Tic-Tac-Toe-Inf oxox |\n");
       wprintw(tui->ncurses_window, "+---------------------------+\n\n");
 
-      sz field_count =
-        sizeof tui->data.dial_in.fields / sizeof tui->data.dial_in.fields[0];
+      sz field_count = sizeof tui->data.dial_in.fields / sizeof fields[0];
 
       for (sz i = 0; i < field_count; i++) {
-        tui_text_input_field* field = tui->data.dial_in.fields + i;
+        tui_text_input_field* field = fields + i;
         tui_text_input_field_draw(field, tui, *active_ui == i);
       }
 
       i4 key = getch();
+
+      if ((key == KEY_ENTER || key == '\n' || key == '\r') &&
+          *active_ui == field_count - 1 && tui->hooks.try_dial_up_hook) {
+        tui->hooks.try_dial_up_hook(tui->hooks.try_dial_up_payload,
+                                    fields[0].buf,
+                                    fields[1].buf,
+                                    (u2)(atoi(fields[2].buf)));
+      }
 
       if (key == KEY_DOWN || key == KEY_CTAB || key == KEY_ENTER ||
           key == '\n' || key == '\r')
@@ -122,13 +132,15 @@ tui_display(tui* tui) {
       if (key == KEY_UP || key == KEY_BTAB)
         *active_ui = (*active_ui + field_count - 1) % field_count;
 
+
       for (sz i = 0; i < field_count; i++) {
-        tui_text_input_field* field = tui->data.dial_in.fields + i;
+        tui_text_input_field* field = fields + i;
         if (*active_ui == i)
           tui_text_input_field_handle_input(field, key);
       }
 
       break;
+    }
     default:
       endwin();
       exit(-42069);

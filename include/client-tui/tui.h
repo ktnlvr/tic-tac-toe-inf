@@ -24,8 +24,18 @@ typedef struct tui_text_input_field {
   bool (*filter)(int);
 } tui_text_input_field;
 
+typedef struct tui_hooks {
+  void* try_dial_up_payload;
+  i4 (*try_dial_up_hook)(void* payload,
+                         char name[NAME_STRING_MAX_LEN],
+                         char host_ipv4[IPV4_STRING_MAX_LEN],
+                         u2 port);
+} tui_hooks;
+
 typedef struct tui {
   tui_screen_id ui_mode;
+  tui_hooks hooks;
+
   WINDOW* ncurses_window;
 
   u1 active_ui_element;
