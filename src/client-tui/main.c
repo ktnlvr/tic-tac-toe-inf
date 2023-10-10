@@ -11,11 +11,18 @@
 
 #include <arpa/inet.h>
 
+#include "./client-tui/tui.h"
 #include "./common/protocol.h"
 #include "./common/types.h"
 
 i4
 main(int argc, char* argv[]) {
+  tui tui = tui_new();
+
+  while (tui_display(&tui) == 0)
+    refresh();
+
+  return 0;
   fd sockfd;
   struct sockaddr_in server;
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
