@@ -27,35 +27,10 @@ main(int argc, char* argv[]) {
   tui tui = tui_new();
   tui.hooks.try_dial_up_hook = exit_upon_dial_up;
 
-  while (tui_display(&tui) == 0)
-    refresh();
-
-  return 0;
-  fd sockfd;
-  struct sockaddr_in server;
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
-  if (sockfd == -1) {
-    printf("Could not create socket");
-  }
-  puts("Socket created");
-
-  server.sin_addr.s_addr = inet_addr(argv[1]);
-  server.sin_family = AF_INET;
-  server.sin_port = htons(PORT);
-
-  if (connect(sockfd, (struct sockaddr*)&server, sizeof(server)) < 0) {
-    perror("connect failed. Error");
-    return 1;
-  }
-
-  int buf;
-  if (recv(sockfd, &buf, 4, 0) < 0) {
-    puts("recv failed");
-    return 1;
-  }
-
-  printf("%X", buf);
+  bool refresh_required = false;
+  while (tui_display(&tui, &refresh_required) == 0)
+    if (refresh_required)
+      refresh();
 
   return 0;
 }

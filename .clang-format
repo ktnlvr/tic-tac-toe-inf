@@ -1,2 +1,4 @@
 BasedOnStyle: Mozilla
 BreakBeforeBraces: Attach
+BinPackArguments: false
+BinPackParameters: false
