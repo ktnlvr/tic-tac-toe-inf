@@ -87,6 +87,7 @@ tui_display(tui* tui) {
     case UI_MODE_UNINITIALIZED: {
       // Set up ncurses data
       tui->ncurses_window = initscr();
+      nodelay(tui->ncurses_window, true);
       memset((void*)&tui->data, 0x00, sizeof tui->data.dial_in);
 
       tui->ui_mode = UI_MODE_DIAL_IN;
@@ -125,7 +126,7 @@ tui_display(tui* tui) {
         tui_text_input_field_draw(field, tui, *active_ui_element_idx == i);
       }
 
-      i4 key = getch();
+      i4 key = wgetch(tui->ncurses_window);
 
       if ((key == KEY_ENTER || key == '\n' || key == '\r') &&
           *active_ui_element_idx == field_count - 1 &&
