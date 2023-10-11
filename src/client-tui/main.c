@@ -48,8 +48,11 @@ main(int argc, char* argv[]) {
   tui tui = tui_new();
   tui.hooks.try_dial_up_hook = exit_upon_dial_up;
 
-  while (tui_display(&tui) == 0)
-    refresh();
+  bool refresh = false;
+  while (tui_draw(&tui, &refresh) == 0) {
+    if (refresh)
+      refresh();
+  }
 
   return 0;
 }

@@ -78,8 +78,35 @@ tui_select_prev(int key) {
   return key == KEY_UP || key == KEY_BTAB;
 }
 
+void
+tui_handle_input(tui* tui,
+                 tui_text_input_field* fields,
+                 sz field_count,
+                 u1* active_ui_element_idx,
+                 i4 key) {
+  if ((key == KEY_ENTER || key == '\n' || key == '\r') &&
+      *active_ui_element_idx == field_count - 1 &&
+      tui->hooks.try_dial_up_hook) {
+    tui->hooks.try_dial_up_hook(tui->hooks.try_dial_up_payload,
+                                fields[0].buf,
+                                fields[1].buf,
+                                (u2)(atoi(fields[2].buf)));
+  }
+  if (tui_select_next(key))
+    *active_ui_element_idx = (*active_ui_element_idx + 1) % field_count;
+  if (tui_select_prev(key))
+    *active_ui_element_idx =
+      (*active_ui_element_idx + field_count - 1) % field_count;
+  for (sz i = 0; i < field_count; i++) {
+    tui_text_input_field* field = fields + i;
+    if (*active_ui_element_idx == i)
+      tui_text_input_field_handle_input(field, key);
+  }
+}
+
 i4
-tui_display(tui* tui) {
+tui_draw(tui* tui, bool* refresh) {
+  *refresh = false;
   u1* const active_ui_element_idx = &tui->active_ui_element;
   erase();
 
@@ -127,26 +154,9 @@ tui_display(tui* tui) {
       }
 
       i4 key = wgetch(tui->ncurses_window);
-
-      if ((key == KEY_ENTER || key == '\n' || key == '\r') &&
-          *active_ui_element_idx == field_count - 1 &&
-          tui->hooks.try_dial_up_hook) {
-        tui->hooks.try_dial_up_hook(tui->hooks.try_dial_up_payload,
-                                    fields[0].buf,
-                                    fields[1].buf,
-                                    (u2)(atoi(fields[2].buf)));
-      }
-
-      if (tui_select_next(key))
-        *active_ui_element_idx = (*active_ui_element_idx + 1) % field_count;
-      if (tui_select_prev(key))
-        *active_ui_element_idx =
-          (*active_ui_element_idx + field_count - 1) % field_count;
-
-      for (sz i = 0; i < field_count; i++) {
-        tui_text_input_field* field = fields + i;
-        if (*active_ui_element_idx == i)
-          tui_text_input_field_handle_input(field, key);
+      if (key != ERR) {
+        tui_handle_input(tui, fields, field_count, active_ui_element_idx, key);
+        *refresh = true;
       }
 
       break;

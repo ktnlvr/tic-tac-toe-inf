@@ -54,7 +54,7 @@ tui
 tui_new();
 
 i4
-tui_display(tui* tui);
+tui_draw(tui* tui, bool* refresh);
 
 void
 tui_text_input_field_draw(tui_text_input_field* field, tui* tui, bool active);
