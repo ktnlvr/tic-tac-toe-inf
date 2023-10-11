@@ -1,4 +1,5 @@
-incdir = include_directories('../../include')
+inc = include_directories('../../include')
 dep = []
 src = []
-lib = library('common', './protocol.c', include_directories:incdir)
+src += files('./board.c')
+lib = library('common', src, include_directories:inc)

@@ -1,6 +1,9 @@
 compile:
 	ninja -vC build -j13
 
+test:
+	MESON_TESTTHREADS=13 meson test -C build
+
 clean:
 	ninja -vC build clean
 
