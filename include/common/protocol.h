@@ -1,23 +1,18 @@
-#include "types.h"
-
 #pragma once
+
+#include "types.h"
 
 #define PORT 42069
 
-typedef enum client2server_packet_id {
-  C2S_PONG,
-} client2server_packet_id;
+enum packet_id_server {
+  PACKET_SERVER_ID_PING  = 0x0,
+  PACKET_SERVER_ID_BEGIN = 0x1,
+  PACKET_SERVER_ID_PUT   = 0x2,
+  PACKET_SERVER_ID_END   = 0x3,
+};
 
-typedef enum server2client_packet_id {
-  S2V_PING,
-} server2client_packet_id;
-
-typedef struct packet {
-  u1 packet_id;
-
-  size_t payload_size;
-  u1* payload;
-} packet;
-
-void
-packet_delete(packet* pkg);
+enum packet_id_client {
+  PACKET_CLIENT_ID_PONG  = 0x0,
+  PACKET_CLIENT_ID_NEW   = 0x1,
+  PACKET_CLIENT_ID_PUT   = 0x2,
+};

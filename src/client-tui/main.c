@@ -13,10 +13,11 @@
 
 #include "./common/protocol.h"
 #include "./common/types.h"
+#include "./src/client-tui/recver.h"
+#include "./src/client-tui/sender.h"
 
 i4
 main(int argc, char* argv[]) {
-  fd sockfd;
   struct sockaddr_in server;
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -33,14 +34,24 @@ main(int argc, char* argv[]) {
     perror("connect failed. Error");
     return 1;
   }
+  puts("Socket connected");
 
+  /*
   int buf;
   if (recv(sockfd, &buf, 4, 0) < 0) {
     puts("recv failed");
     return 1;
   }
 
-  printf("%X", buf);
+  printf("%i\n", buf);
+
+  u1 *buf2 = malloc(5);
+  recv(sockfd, buf2, 5, 0);
+
+  printf("%i %i\n", *(u1*)buf2, *(u4*)(buf2+1));
+  */
+
+  recv_packet(sockfd);
 
   return 0;
 }
