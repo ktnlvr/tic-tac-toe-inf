@@ -78,18 +78,13 @@ tui_select_prev(int key) {
   return key == KEY_UP || key == KEY_BTAB;
 }
 
-#define REFRESH()                                                              \
-  if (refresh) {                                                               \
-    *refresh = true;                                                           \
-  }
-
 i4
-tui_display(tui* tui, bool* refresh) {
+tui_display(tui* tui) {
   u1* const active_ui_element_idx = &tui->active_ui_element;
+  erase();
 
   switch (tui->ui_mode) {
     case UI_MODE_UNINITIALIZED: {
-      erase();
       // Set up ncurses data
       tui->ncurses_window = initscr();
       memset((void*)&tui->data, 0x00, sizeof tui->data.dial_in);
@@ -153,7 +148,6 @@ tui_display(tui* tui, bool* refresh) {
           tui_text_input_field_handle_input(field, key);
       }
 
-      REFRESH()
       break;
     }
     default:

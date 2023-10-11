@@ -44,29 +44,12 @@ main(int argc, char* argv[]) {
   }
   puts("Socket connected");
 
-  /*
-  int buf;
-  if (recv(sockfd, &buf, 4, 0) < 0) {
-    puts("recv failed");
-    return 1;
-  }
-
-  printf("%i\n", buf);
-
-  u1 *buf2 = malloc(5);
-  recv(sockfd, buf2, 5, 0);
-
-  printf("%i %i\n", *(u1*)buf2, *(u4*)(buf2+1));
-  */
-
   recv_packet(sockfd);
   tui tui = tui_new();
   tui.hooks.try_dial_up_hook = exit_upon_dial_up;
 
-  bool refresh_required = false;
-  while (tui_display(&tui, &refresh_required) == 0)
-    if (refresh_required)
-      refresh();
+  while (tui_display(&tui) == 0)
+    refresh();
 
   return 0;
 }
