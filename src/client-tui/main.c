@@ -27,8 +27,8 @@ main(int argc, char* argv[]) {
   if (argc >= 3)
     strlcpy(port, argv[2], PORT_STRING_MAX_LEN);
 
-  tui_screen_state tui = tui_init();
-  tui_show_connect_screen(&tui, name, host, port);
+  tui_init();
+  tui_show_connect_screen(name, host, port);
 
   printf("%s is connecting to %s:%s!\n", name, host, port);
   endwin();

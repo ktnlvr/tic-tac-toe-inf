@@ -3,14 +3,12 @@
 #include <ncurses.h>
 #include <string.h>
 
-tui_screen_state
+void
 tui_init() {
-  tui_screen_state ret;
-  ret.ncurses_window = initscr();
+  initscr();
   curs_set(0);
-  keypad(ret.ncurses_window, TRUE);
+  keypad(stdscr, TRUE);
   noecho();
-  return ret;
 }
 
 bool
@@ -29,10 +27,7 @@ no_space_filter(int input_key) {
 }
 
 void
-tui_show_connect_screen(tui_screen_state* tui,
-                        char* name,
-                        char* host_ipv4,
-                        char* port) {
+tui_show_connect_screen(char* name, char* host_ipv4, char* port) {
 
   static const int field_count = 3;
   static const char* names[3] = { "Nickname", "IPv4", "Port" };
@@ -48,28 +43,28 @@ tui_show_connect_screen(tui_screen_state* tui,
   i4 key = ERR;
   for (;;) {
     erase();
-    box(tui->ncurses_window, 0, 0);
-    mvwprintw(tui->ncurses_window, 0, 2, "TicTacToeInf: Connect");
+    box(stdscr, 0, 0);
+    mvwprintw(stdscr, 0, 2, "TicTacToeInf: Connect");
 
     for (sz i = 0; i < field_count; i++) {
       if (i == active_idx)
-        wattron(tui->ncurses_window, A_STANDOUT);
-      mvwprintw(tui->ncurses_window, 2 + i, 3, names[i]);
+        wattron(stdscr, A_STANDOUT);
+      mvwprintw(stdscr, 2 + i, 3, names[i]);
       if (i == active_idx)
-        wattroff(tui->ncurses_window, A_STANDOUT);
-      wprintw(tui->ncurses_window, ": ");
-      wprintw(tui->ncurses_window, buffers[i]);
+        wattroff(stdscr, A_STANDOUT);
+      wprintw(stdscr, ": ");
+      wprintw(stdscr, buffers[i]);
     }
 
     if (active_idx == 3)
-      wattron(tui->ncurses_window, A_STANDOUT);
-    mvwprintw(tui->ncurses_window, 6, 3, " Connect! ");
+      wattron(stdscr, A_STANDOUT);
+    mvwprintw(stdscr, 6, 3, " Connect! ");
     if (active_idx == 3)
-      wattroff(tui->ncurses_window, A_STANDOUT);
+      wattroff(stdscr, A_STANDOUT);
 
     refresh();
 
-    key = wgetch(tui->ncurses_window);
+    key = wgetch(stdscr);
     switch (key) {
       case '\n':
       case '\r':
