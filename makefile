@@ -11,4 +11,4 @@ server: compile
 	./build/src/server/server
 
 client: compile
-	./build/src/client-tui/client-tui 127.0.0.1
+	./build/src/client-tui/client-tui 127.0.0.1 42060

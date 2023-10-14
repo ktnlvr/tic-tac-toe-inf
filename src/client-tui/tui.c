@@ -3,49 +3,14 @@
 #include <ncurses.h>
 #include <string.h>
 
-tui
-tui_new() {
-  tui ret;
-  memset(&ret, 0x00, sizeof ret);
-  ret.ui_mode = UI_MODE_UNINITIALIZED;
+tui_screen_state
+tui_init() {
+  tui_screen_state ret;
+  ret.ncurses_window = initscr();
+  curs_set(0);
+  keypad(ret.ncurses_window, TRUE);
+  noecho();
   return ret;
-}
-
-void
-tui_text_input_field_draw(tui_text_input_field* field, tui* tui, bool active) {
-  WINDOW* w = tui->ncurses_window;
-
-  if (active)
-    attron(A_BOLD);
-  wprintw(w, "%s%s", field->prompt, ": ");
-  if (active)
-    attroff(A_BOLD);
-
-  wprintw(w, "%s\n", field->buf);
-}
-
-void
-tui_text_input_field_handle_input(tui_text_input_field* field, int input_key) {
-  if (input_key == KEY_BACKSPACE) {
-    memset(field->buf, '\0', field->buflen);
-    return;
-  }
-
-  sz len = strlen(field->buf);
-  if (len + 1 == field->buflen) {
-    return;
-  }
-
-  if (field->filter)
-    if (!field->filter(input_key))
-      return;
-
-  // Keypress to ASCII
-  char c = input_key & 0x7F;
-  if (c < 32 || c > 0x7E)
-    return;
-
-  field->buf[len] = c;
 }
 
 bool
@@ -63,109 +28,75 @@ no_space_filter(int input_key) {
   return (input_key != ' ');
 }
 
-#define NAME_FIELD_IDX 0
-#define IPV4_FIELD_IDX 1
-#define PORT_FIELD_IDX 2
-
-bool
-tui_select_next(int key) {
-  return key == KEY_DOWN || key == KEY_CTAB || key == KEY_ENTER ||
-         key == '\n' || key == '\r';
-}
-
-bool
-tui_select_prev(int key) {
-  return key == KEY_UP || key == KEY_BTAB;
-}
-
 void
-tui_handle_input(tui* tui,
-                 tui_text_input_field* fields,
-                 sz field_count,
-                 u1* active_ui_element_idx,
-                 i4 key) {
-  if ((key == KEY_ENTER || key == '\n' || key == '\r') &&
-      *active_ui_element_idx == field_count - 1 &&
-      tui->hooks.try_dial_up_hook) {
-    tui->hooks.try_dial_up_hook(tui->hooks.try_dial_up_payload,
-                                fields[0].buf,
-                                fields[1].buf,
-                                (u2)(atoi(fields[2].buf)));
-  }
-  if (tui_select_next(key))
-    *active_ui_element_idx = (*active_ui_element_idx + 1) % field_count;
-  if (tui_select_prev(key))
-    *active_ui_element_idx =
-      (*active_ui_element_idx + field_count - 1) % field_count;
-  for (sz i = 0; i < field_count; i++) {
-    tui_text_input_field* field = fields + i;
-    if (*active_ui_element_idx == i)
-      tui_text_input_field_handle_input(field, key);
-  }
-}
+tui_show_connect_screen(tui_screen_state* tui,
+                        char* name,
+                        char* host_ipv4,
+                        char* port) {
 
-i4
-tui_draw(tui* tui, bool* refresh) {
-  *refresh = false;
-  u1* const active_ui_element_idx = &tui->active_ui_element;
-  erase();
+  static const int field_count = 3;
+  static const char* names[3] = { "Nickname", "IPv4", "Port" };
+  static const sz buffer_lengths[3] = { NAME_STRING_MAX_LEN,
+                                        IPV4_STRING_MAX_LEN,
+                                        PORT_STRING_MAX_LEN };
+  char* buffers[] = { name, host_ipv4, port };
 
-  switch (tui->ui_mode) {
-    case UI_MODE_UNINITIALIZED: {
-      // Set up ncurses data
-      tui->ncurses_window = initscr();
-      nodelay(tui->ncurses_window, true);
-      memset((void*)&tui->data, 0x00, sizeof tui->data.dial_in);
+  bool (*filters[3])(int) = { no_space_filter, ipv4_addr_filter, port_filter };
 
-      tui->ui_mode = UI_MODE_DIAL_IN;
-      tui_text_input_field* const fields = tui->data.dial_in.fields;
+  sz active_idx = 0;
 
-      fields[NAME_FIELD_IDX].prompt = "Name";
-      fields[NAME_FIELD_IDX].buf = tui->data.dial_in.name_buf;
-      fields[NAME_FIELD_IDX].buflen = NAME_STRING_MAX_LEN;
-      fields[NAME_FIELD_IDX].filter = no_space_filter;
+  i4 key = ERR;
+  for (;;) {
+    erase();
+    box(tui->ncurses_window, 0, 0);
+    mvwprintw(tui->ncurses_window, 0, 2, "TicTacToeInf: Connect");
 
-      fields[IPV4_FIELD_IDX].prompt = "IPv4";
-      fields[IPV4_FIELD_IDX].buf = tui->data.dial_in.ipv4_buf;
-      fields[IPV4_FIELD_IDX].buflen = IPV4_STRING_MAX_LEN;
-      fields[IPV4_FIELD_IDX].filter = ipv4_addr_filter;
-
-      fields[PORT_FIELD_IDX].prompt = "Port";
-      fields[PORT_FIELD_IDX].buf = tui->data.dial_in.port_buf;
-      fields[PORT_FIELD_IDX].buflen = PORT_STRING_MAX_LEN;
-      fields[PORT_FIELD_IDX].filter = port_filter;
-
-      curs_set(0);
-      keypad(tui->ncurses_window, TRUE);
+    for (sz i = 0; i < field_count; i++) {
+      if (i == active_idx)
+        wattron(tui->ncurses_window, A_STANDOUT);
+      mvwprintw(tui->ncurses_window, 2 + i, 3, names[i]);
+      if (i == active_idx)
+        wattroff(tui->ncurses_window, A_STANDOUT);
+      wprintw(tui->ncurses_window, ": ");
+      wprintw(tui->ncurses_window, buffers[i]);
     }
-    case UI_MODE_DIAL_IN: {
-      tui_text_input_field* fields = tui->data.dial_in.fields;
 
-      // TODO: make this use box(...)
-      wprintw(tui->ncurses_window, "+---------------------------+\n");
-      wprintw(tui->ncurses_window, "| xoxo Tic-Tac-Toe-Inf oxox |\n");
-      wprintw(tui->ncurses_window, "+---------------------------+\n\n");
+    if (active_idx == 3)
+      wattron(tui->ncurses_window, A_STANDOUT);
+    mvwprintw(tui->ncurses_window, 6, 3, " Connect! ");
+    if (active_idx == 3)
+      wattroff(tui->ncurses_window, A_STANDOUT);
 
-      sz field_count = sizeof tui->data.dial_in.fields / sizeof fields[0];
+    refresh();
 
-      for (sz i = 0; i < field_count; i++) {
-        tui_text_input_field* field = fields + i;
-        tui_text_input_field_draw(field, tui, *active_ui_element_idx == i);
-      }
-
-      i4 key = wgetch(tui->ncurses_window);
-      if (key != ERR) {
-        tui_handle_input(tui, fields, field_count, active_ui_element_idx, key);
-        *refresh = true;
-      }
-
-      break;
+    key = wgetch(tui->ncurses_window);
+    switch (key) {
+      case '\n':
+      case '\r':
+      case KEY_ENTER:
+        if (active_idx == 3)
+          return;
+      case KEY_DOWN:
+        active_idx = (active_idx + 1) % (field_count + 1);
+        break;
+      case KEY_UP:
+        active_idx = (active_idx + 3) % (field_count + 1);
+        break;
+      case ERR:
+        break;
+      default:
+        for (sz i = 0; i < field_count; i++) {
+          if (active_idx == i) {
+            sz len = strlen(buffers[i]);
+            char key_ascii = key & 0x7F;
+            if (key == KEY_BACKSPACE && len > 0) {
+              buffers[i][len - 1] = '\0';
+            } else if (0x20 < key_ascii && key_ascii < 0x7B &&
+                       len + 1 < buffer_lengths[i] && filters[i](key_ascii)) {
+              buffers[i][len] = key_ascii;
+            }
+          }
+        }
     }
-    default:
-      endwin();
-      exit(-42069);
-      break;
   }
-
-  return 0;
 }
