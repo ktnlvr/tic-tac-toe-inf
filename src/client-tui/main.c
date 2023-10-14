@@ -19,7 +19,7 @@
 
 i4
 main(int argc, char* argv[]) {
-  char name[NAME_LEN_MAX] = "", host[IPV4_STRING_MAX_LEN] = "",
+  char name[NAME_STRING_MAX_LEN] = "", host[IPV4_STRING_MAX_LEN] = "",
        port[PORT_STRING_MAX_LEN] = "";
 
   if (argc >= 2)
