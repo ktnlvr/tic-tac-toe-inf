@@ -20,13 +20,10 @@ typedef struct board {
 } board;
 
 board
-board_new() {
-  board ret;
-  ret.capacity = 0;
-  ret.size = 0;
-  ret.data = NULL;
-  return ret;
-}
+board_new();
+
+void
+board_delete(board*);
 
 // It's like insert, but sorted
 void

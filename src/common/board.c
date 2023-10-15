@@ -4,6 +4,15 @@
 
 #define GROW_BOARD_CAPACITY(c) ((c + 1) * 3)
 
+board
+board_new() {
+  board ret;
+  ret.capacity = 0;
+  ret.size = 0;
+  ret.data = NULL;
+  return ret;
+}
+
 board_mark*
 board_get(board* self, i4 x, i4 y) {
   for (sz i = 0; i < self->size; i++)
@@ -32,4 +41,10 @@ board_insort(board* self, i4 x, i4 y, board_mark mark) {
     self->data[self->size].y = y;
     self->data[self->size++].mark = mark;
   }
+}
+
+void
+board_delete(board* board) {
+  if (board->data)
+    free(board->data);
 }

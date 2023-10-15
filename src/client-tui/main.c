@@ -33,5 +33,19 @@ main(int argc, char* argv[]) {
   printf("%s is connecting to %s:%s!\n", name, host, port);
   endwin();
 
+  tui_game_state game = tui_game_new();
+  game.opponent_name = "CPU";
+
+  board_insort(&game.board, 0, 0, BOARD_MARK_CROSS);
+  board_insort(&game.board, 6, 4, BOARD_MARK_CROSS);
+  board_insort(&game.board, -3, -3, BOARD_MARK_KNOT);
+
+  for (;;) {
+    tui_game_screen_display(&game);
+    tui_game_screen_handle_input(&game, getch());
+  }
+
+  tui_game_delete(&game);
+
   return 0;
 }
